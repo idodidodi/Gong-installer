@@ -88,6 +88,9 @@ mkdir -p "${GONG_DATA_DIR}"
 # HW Support
 echo "Configuring hardware access for USB HK4 Keyboard..."
 sudo -S usermod -a -G input "${USER}" <<< "${USER_PASS}"
+echo 'ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="3553", ATTRS{idProduct}=="b001", MODE="0660", GROUP="input", TAG+="uaccess"' | sudo -S tee /etc/udev/rules.d/99-pcsensor.rules <<< "${USER_PASS}" >/dev/null
+sudo -S udevadm control --reload-rules <<< "${USER_PASS}"
+sudo -S udevadm trigger <<< "${USER_PASS}"
 
 # Building the BE and FE
 "${DEV_OPS_FILES_DIR}"/refresh_gong_server_be.sh "${USER}" "${USER_PASS}" "${GONG_BE_BRANCH}"
