@@ -144,7 +144,7 @@ wss.on('connection', (ws) => {
             runValidation();
         } else if (payload.action === 'pm2-setup') {
             const { params } = payload;
-            const ecosystemPath = path.join(params.projectPath, 'dev_ops', 'ecosystem.config.js');
+            const ecosystemPath = path.join(params.projectPath, 'gong_dev_ops', 'dev_ops', 'ecosystem.config.js');
             const cmd = `bash "${path.join(SCRIPTS_DIR, 'pm2-setup.sh')}" "${params.pass}" "${ecosystemPath}"`;
             runCommand(cmd, [], ws);
         } else if (payload.action === 'pm2-list') {
@@ -157,6 +157,9 @@ wss.on('connection', (ws) => {
             runCommand(`pm2 delete ${payload.params.id}`, [], ws);
         } else if (payload.action === 'pm2-delete-all') {
             runCommand('pm2 delete all', [], ws);
+        } else if (payload.action === 'pm2-logs') {
+            const id = payload.params.id || '';
+            runCommand(`pm2 logs ${id} --lines 100 --nostream`, [], ws);
         }
     });
 });

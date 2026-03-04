@@ -54,17 +54,6 @@ fi
 mkdir -p "${BASE_PATH}"
 cd "${BASE_PATH}"
 
-# Clone with branch if specified, otherwise use default
-if [ -n "${GONG_BE_BRANCH}" ]; then
-  git clone -b "${GONG_BE_BRANCH}" "${GONG_BE_REPO}" "${TARGET_DIR}"
-else
-  git clone "${GONG_BE_REPO}" "${TARGET_DIR}"
-fi
-
-cp "${PROJECT_PATH}/dev_ops/deploy_gong.sh" .
-cp "${PROJECT_PATH}/dev_ops/deploy_gong_actions.sh" .
-rm -rf "${TARGET_DIR}"
-
-sudo -S chmod +x ./deploy_gong.sh <<< "${USER_PASS}"
-sudo -S chmod +x ./deploy_gong_actions.sh <<< "${USER_PASS}" 
-./deploy_gong.sh "${USER}" "${USER_PASS}" "${IS_DOCKER}" "${GONG_BE_BRANCH}" "${GONG_FE_BRANCH}"
+# Call the local deploy.sh script which is in the same directory as this init.sh
+SCRIPTS_DIR="$(dirname "$0")"
+bash "${SCRIPTS_DIR}/deploy.sh" "${USER}" "${USER_PASS}" "${IS_DOCKER}" "${GONG_BE_BRANCH}" "${GONG_FE_BRANCH}" "${PROJECT_PATH}"

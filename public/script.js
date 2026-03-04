@@ -110,6 +110,11 @@ document.getElementById('btn-pm2-delete').onclick = () => {
     else log('Please enter an App Name or ID', 'error');
 };
 
+document.getElementById('btn-pm2-logs').onclick = () => {
+    const id = document.getElementById('pm2-id').value;
+    sendAction('pm2-logs', { id: id || '' });
+};
+
 document.getElementById('btn-install').onclick = () => {
     modal.style.display = 'flex';
 };
