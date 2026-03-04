@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gong Installer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="dashboard">
+        <header>
+            <h1>GONG <span>INSTALLER</span></h1>
+            <div id="status" class="status-badge">Ready</div>
+        </header>
+
+        <div class="card config-card">
+            <h3 class="accent-title">Global Configuration (Credentials)</h3>
+            <div class="config-grid">
+                <div class="input-group">
+                    <label>User</label>
+                    <input type="text" id="global-user" value="p-admin">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="global-pass" value="123456">
+                </div>
+                <div class="input-group" style="flex: 2; min-width: 300px;">
+                    <label>Project Path (Persistent)</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="global-path" value="~/gong" style="flex: 1;">
+                        <button class="primary" id="btn-browse" style="padding: 0 1rem; height: 42px;">Browse</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="card action-card" id="btn-extra-clean">
+                <h3>Extra Clean</h3>
+                <p>Full cleanup (skips installer). Kills PM2 and clears workspace.</p>
+            </div>
+            <div class="card action-card" id="btn-clean">
+                <h3>Clean</h3>
+                <p>Standard cleanup of ~/projects and Gong-be.</p>
+            </div>
+            <div class="card action-card" id="btn-install">
+                <h3>Install</h3>
+                <p>Runs docker_init with custom parameters.</p>
+            </div>
+            <div class="card action-card" id="btn-pm2">
+                <h3>PM2 Setup</h3>
+                <p>Starts services and saves configuration.</p>
+            </div>
+        </div>
+
+        <div class="controls secondary">
+            <div class="card mini" id="btn-pm2-list">
+                <h3>PM2 List</h3>
+            </div>
+            <div class="card mini" id="btn-pm2-stop-all">
+                <h3>Stop All</h3>
+            </div>
+            <div class="card mini" id="btn-pm2-delete-all">
+                <h3>Delete All</h3>
+            </div>
+        </div>
+
+        <div class="pm2-actions-form card">
+            <div class="pm2-form-inner">
+                <input type="text" id="pm2-id" placeholder="App Name or ID">
+                <button class="btn-stop" id="btn-pm2-stop">Stop</button>
+                <button class="btn-delete" id="btn-pm2-delete">Delete</button>
+            </div>
+        </div>
+
+        <div id="terminal" class="terminal-container">
+            <div class="log-line log-info">Welcome to Gong Installer. Select an action to begin.</div>
+        </div>
+    </div>
+
+    <!-- Install Parameters Modal -->
+    <div id="install-modal" class="modal">
+        <div class="modal-content">
+            <h3>Installation Parameters</h3>
+            <div class="input-group">
+                <label>Is Dev</label>
+                <select id="param-isdev">
+                    <option value="true">True</option>
+                    <option value="false" selected>False</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Branch</label>
+                <input type="text" id="param-branch" value="" placeholder="leave it blank if you are not a developer">
+            </div>
+            <div class="input-group">
+                <label>Repository</label>
+                <input type="text" id="param-repo" value="" placeholder="leave it blank if you are not a developer">
+            </div>
+            <div class="modal-buttons">
+                <button class="primary" id="confirm-install">Run Installation</button>
+                <button id="cancel-install" class="btn-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
