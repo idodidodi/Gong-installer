@@ -13,9 +13,9 @@ PROJECT_PATH="${PROJECT_PATH/#\~/$HOME}"
 BASE_PATH=$(dirname "${PROJECT_PATH}")
 TARGET_DIR=$(basename "${PROJECT_PATH}")
 
-# Echo parameters
+# Echo parameters (Masking sensitive info)
 echo "Parameter 1 (USER): ${USER}"
-echo "Parameter 2 (USER_PASS): ${USER_PASS}"
+echo "Parameter 2 (USER_PASS): ********"
 echo "Parameter 3 (IS_DOCKER): ${IS_DOCKER}"
 echo "Parameter 4 (GONG_BE_BRANCH): ${GONG_BE_BRANCH}"
 echo "Parameter 5 (GONG_FE_BRANCH): ${GONG_FE_BRANCH}"

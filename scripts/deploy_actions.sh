@@ -1,5 +1,6 @@
 #!/bin/bash
-set -x
+# set -x removed for security reasons to prevent password leakage in logs
+set -e
 
 USER=$1
 USER_PASS=$2

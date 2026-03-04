@@ -115,21 +115,10 @@ document.getElementById('btn-pm2-logs').onclick = () => {
     sendAction('pm2-logs', { id: id || '' });
 };
 
-document.getElementById('btn-install').onclick = () => {
-    modal.style.display = 'flex';
-};
+const customSetupCheckbox = document.getElementById('custom-setup');
 
-document.getElementById('cancel-install').onclick = () => {
-    modal.style.display = 'none';
-};
-
-document.getElementById('confirm-install').onclick = () => {
-    pendingParams = {
-        is_dev: document.getElementById('param-isdev').value,
-        branch: document.getElementById('param-branch').value,
-        repo: document.getElementById('param-repo').value
-    };
-    modal.style.display = 'none';
+function runInstallationWithParams(params) {
+    pendingParams = params;
 
     // Stage 1: Validate links
     statusBadge.textContent = 'Validating...';
@@ -141,4 +130,31 @@ document.getElementById('confirm-install').onclick = () => {
         action: 'validate-links',
         params: { branch: pendingParams.branch, repo: pendingParams.repo }
     }));
+}
+
+document.getElementById('btn-install').onclick = () => {
+    if (customSetupCheckbox.checked) {
+        modal.style.display = 'flex';
+    } else {
+        // Run with default parameters
+        runInstallationWithParams({
+            is_dev: 'false',
+            branch: '',
+            repo: ''
+        });
+    }
+};
+
+document.getElementById('cancel-install').onclick = () => {
+    modal.style.display = 'none';
+};
+
+document.getElementById('confirm-install').onclick = () => {
+    const params = {
+        is_dev: document.getElementById('param-isdev').value,
+        branch: document.getElementById('param-branch').value,
+        repo: document.getElementById('param-repo').value
+    };
+    modal.style.display = 'none';
+    runInstallationWithParams(params);
 };

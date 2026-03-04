@@ -18,6 +18,22 @@ const SCRIPTS_DIR = path.join(__dirname, 'scripts');
 const CONFIG_DIR = path.join(os.homedir(), '.config', 'gong-installer');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 
+function maskObject(obj) {
+    if (!obj) return obj;
+    const masked = JSON.parse(JSON.stringify(obj));
+    const mask = (o) => {
+        for (let key in o) {
+            if (key.toLowerCase().includes('pass') || key.toLowerCase().includes('password')) {
+                o[key] = '*****';
+            } else if (typeof o[key] === 'object' && o[key] !== null) {
+                mask(o[key]);
+            }
+        }
+    };
+    mask(masked);
+    return masked;
+}
+
 function loadConfig() {
     const defaultConfig = { projectPath: path.join(os.homedir(), 'gong') };
     try {
@@ -41,15 +57,26 @@ function saveConfig(config) {
     }
 }
 
-function runCommand(command, args, ws) {
+function runCommand(command, args, ws, passwordToMask = null) {
     const child = spawn(command, args, { shell: true, env: { ...process.env, TERM: 'xterm-256color' } });
 
+    const maskData = (data) => {
+        let str = data.toString();
+        if (passwordToMask && passwordToMask.length > 0) {
+            // Escape special regex characters in password
+            const escapedPw = passwordToMask.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(escapedPw, 'g');
+            str = str.replace(regex, '*****');
+        }
+        return str;
+    };
+
     child.stdout.on('data', (data) => {
-        ws.send(JSON.stringify({ type: 'log', data: data.toString() }));
+        ws.send(JSON.stringify({ type: 'log', data: maskData(data) }));
     });
 
     child.stderr.on('data', (data) => {
-        ws.send(JSON.stringify({ type: 'error', data: data.toString() }));
+        ws.send(JSON.stringify({ type: 'error', data: maskData(data) }));
     });
 
     child.on('close', (code) => {
@@ -67,12 +94,16 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (message) => {
         const payload = JSON.parse(message);
-        console.log('Received:', payload);
+
+        // Mask password in server log
+        console.log('Received:', maskObject(payload));
+
+        const pass = (payload.params && payload.params.pass) || null;
 
         if (payload.action === 'update-config') {
             saveConfig(payload.params);
             ws.send(JSON.stringify({ type: 'config', data: payload.params }));
-            console.log('Config updated:', payload.params);
+            console.log('Config updated:', maskObject(payload.params));
         } else if (payload.action === 'open-system-browser') {
             const startPath = (payload.params.path || os.homedir()).replace('~', os.homedir());
             const cmd = `zenity --file-selection --directory --title="Select Project Folder" --filename="${startPath}/"`;
@@ -105,13 +136,13 @@ wss.on('connection', (ws) => {
                 ws.send(JSON.stringify({ type: 'error', data: `Error listing directory: ${e.message}` }));
             }
         } else if (payload.action === 'extra-clean') {
-            runCommand(`bash "${path.join(SCRIPTS_DIR, 'extra-clean.sh')}" "${payload.params.pass}" "${payload.params.projectPath}"`, [], ws);
+            runCommand(`bash "${path.join(SCRIPTS_DIR, 'extra-clean.sh')}" "${payload.params.pass}" "${payload.params.projectPath}"`, [], ws, pass);
         } else if (payload.action === 'clean') {
-            runCommand(`bash "${path.join(SCRIPTS_DIR, 'clean.sh')}" "${payload.params.pass}" "${payload.params.projectPath}"`, [], ws);
+            runCommand(`bash "${path.join(SCRIPTS_DIR, 'clean.sh')}" "${payload.params.pass}" "${payload.params.projectPath}"`, [], ws, pass);
         } else if (payload.action === 'install') {
             const { params } = payload;
             const cmd = `bash "${path.join(SCRIPTS_DIR, 'init.sh')}" "${params.user}" "${params.pass}" "${params.is_dev}" "${params.branch}" "${params.repo}" "${params.projectPath}"`;
-            runCommand(`pm2 kill && ${cmd}`, [], ws);
+            runCommand(`pm2 kill && ${cmd}`, [], ws, pass);
         } else if (payload.action === 'validate-links') {
             const { branch, repo } = payload.params;
             const beRepo = "https://github.com/DhammaPamoda/Gong-be.git";
@@ -146,20 +177,20 @@ wss.on('connection', (ws) => {
             const { params } = payload;
             const ecosystemPath = path.join(params.projectPath, 'gong_dev_ops', 'dev_ops', 'ecosystem.config.js');
             const cmd = `bash "${path.join(SCRIPTS_DIR, 'pm2-setup.sh')}" "${params.pass}" "${ecosystemPath}"`;
-            runCommand(cmd, [], ws);
+            runCommand(cmd, [], ws, pass);
         } else if (payload.action === 'pm2-list') {
-            runCommand('pm2 list', [], ws);
+            runCommand('pm2 list', [], ws, pass);
         } else if (payload.action === 'pm2-stop') {
-            runCommand(`pm2 stop ${payload.params.id}`, [], ws);
+            runCommand(`pm2 stop ${payload.params.id}`, [], ws, pass);
         } else if (payload.action === 'pm2-stop-all') {
-            runCommand('pm2 stop all', [], ws);
+            runCommand('pm2 stop all', [], ws, pass);
         } else if (payload.action === 'pm2-delete') {
-            runCommand(`pm2 delete ${payload.params.id}`, [], ws);
+            runCommand(`pm2 delete ${payload.params.id}`, [], ws, pass);
         } else if (payload.action === 'pm2-delete-all') {
-            runCommand('pm2 delete all', [], ws);
+            runCommand('pm2 delete all', [], ws, pass);
         } else if (payload.action === 'pm2-logs') {
             const id = payload.params.id || '';
-            runCommand(`pm2 logs ${id} --lines 100 --nostream`, [], ws);
+            runCommand(`pm2 logs ${id} --lines 100 --nostream`, [], ws, pass);
         }
     });
 });

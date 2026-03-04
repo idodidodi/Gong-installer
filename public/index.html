@@ -49,6 +49,10 @@
             <div class="card action-card" id="btn-install">
                 <h3>Install</h3>
                 <p>Runs docker_init with custom parameters.</p>
+                <div class="checkbox-group" onclick="event.stopPropagation()">
+                    <input type="checkbox" id="custom-setup">
+                    <label for="custom-setup">Custom Setup</label>
+                </div>
             </div>
             <div class="card action-card" id="btn-pm2">
                 <h3>PM2 Setup</h3>
