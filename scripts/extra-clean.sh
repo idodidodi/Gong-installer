@@ -29,7 +29,7 @@ pm2 kill
 # Clear target directory (preserving the installer)
 if [ -d "${PROJECT_PATH}" ]; then
   echo "Clearing items in ${PROJECT_PATH} (skipping gong-installer)..."
-  find "${PROJECT_PATH}" -maxdepth 1 ! -name "gong-installer" ! -path "${PROJECT_PATH}" -print0 | xargs -0 -I {} echo "${USER_PASS}" | sudo -S rm -rv {} 2>/dev/null || true
+  find "${PROJECT_PATH}" -maxdepth 1 ! -name "gong-installer" ! -path "${PROJECT_PATH}" -print0 | xargs -0 -I {} sh -c 'echo "$0" | sudo -S rm -rv "$1"' "${USER_PASS}" {} 2>/dev/null || true
   echo "${PROJECT_PATH} cleanup completed!"
 else
   echo "${PROJECT_PATH} directory does not exist. Nothing to clean."

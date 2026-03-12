@@ -20,7 +20,8 @@ ECOSYSTEM_PATH="${ECOSYSTEM_PATH/#\~/$HOME}"
 echo "Starting ecosystem with input group permissions..."
 # Use sg input to ensure the PM2 processes start with the 'input' group permissions
 # necessary for hk4_listener to access /dev/input devices.
-sg input -c "pm2 start \"$ECOSYSTEM_PATH\""
+# Use startOrRestart so this is safe to run even if processes are already registered in PM2.
+sg input -c "pm2 startOrRestart \"$ECOSYSTEM_PATH\""
 
 echo "Generating startup command..."
 # Run pm2 startup and capture the output. 
