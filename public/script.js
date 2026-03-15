@@ -2,6 +2,7 @@ const terminal = document.getElementById('terminal');
 const statusBadge = document.getElementById('status');
 const modal = document.getElementById('install-modal');
 const globalPathInput = document.getElementById('global-path');
+const devPathInput = document.getElementById('dev-path');
 
 let pendingParams = null;
 
@@ -20,7 +21,6 @@ function log(data, type = 'log') {
         }
     });
 
-    // Fallback if data was just whitespace/empty but we still want a line
     if (!line.hasChildNodes()) {
         line.textContent = data;
     }
@@ -34,7 +34,9 @@ ws.onmessage = (event) => {
     if (payload.type === 'log') log(payload.data);
     if (payload.type === 'error') log(payload.data, 'error');
     if (payload.type === 'config') {
-        globalPathInput.value = payload.data.projectPath;
+        globalPathInput.value = payload.data.projectPath || '~/gong';
+        devPathInput.value = payload.data.devPath || '~/projects';
+        updateDevPathsUI(devPathInput.value);
     }
     if (payload.type === 'dirs') {
         renderDirs(payload.path, payload.items);
@@ -64,12 +66,12 @@ function sendAction(action, params = {}) {
     statusBadge.className = 'status-badge status-running';
     terminal.innerHTML = '';
 
-    // Always include global credentials and path
     const user = document.getElementById('global-user').value;
     const pass = document.getElementById('global-pass').value;
     const projectPath = globalPathInput.value;
+    const devPath = devPathInput.value;
 
-    const finalParams = { user, pass, projectPath, ...params };
+    const finalParams = { user, pass, projectPath, devPath, ...params };
 
     log(`Starting action: ${action}...`, 'info');
     ws.send(JSON.stringify({ action, params: finalParams }));
@@ -77,50 +79,47 @@ function sendAction(action, params = {}) {
 
 function updateGlobalConfig() {
     const projectPath = globalPathInput.value;
-    ws.send(JSON.stringify({ action: 'update-config', params: { projectPath } }));
+    const devPath = devPathInput.value;
+    ws.send(JSON.stringify({ action: 'update-config', params: { projectPath, devPath } }));
+    updateDevPathsUI(devPath);
+}
+
+function updateDevPathsUI(path) {
+    const ftdiDestPathSpan = document.getElementById('ftdi-dest-path');
+    if (ftdiDestPathSpan) {
+        ftdiDestPathSpan.innerHTML = `${path}/gong_server/node_modules/ftdi-d2xx<br/>${path}/Gong-be/node_modules/ftdi-d2xx`;
+    }
 }
 
 globalPathInput.onchange = updateGlobalConfig;
+devPathInput.onchange = updateGlobalConfig;
 
-// Directory Browser Logic (Native System)
-function openBrowser() {
-    const currentPath = globalPathInput.value || '';
-    ws.send(JSON.stringify({ action: 'open-system-browser', params: { path: currentPath } }));
+function openBrowser(target = 'global') {
+    const currentPath = target === 'global' ? globalPathInput.value : devPathInput.value;
+    ws.send(JSON.stringify({ action: 'open-system-browser', params: { path: currentPath || '', target } }));
 }
 
-document.getElementById('btn-browse').onclick = openBrowser;
+document.getElementById('btn-browse').onclick = () => openBrowser('global');
+document.getElementById('btn-browse-dev').onclick = () => openBrowser('dev');
 
 document.getElementById('btn-extra-clean').onclick = () => sendAction('extra-clean');
 document.getElementById('btn-clean').onclick = () => sendAction('clean');
 document.getElementById('btn-pm2').onclick = () => sendAction('pm2-setup');
 
+document.getElementById('btn-copy-ftdi').onclick = () => sendAction('copy-ftdi', { devPath: devPathInput.value });
+
 document.getElementById('btn-pm2-list').onclick = () => sendAction('pm2-list');
 document.getElementById('btn-pm2-stop-all').onclick = () => sendAction('pm2-stop-all');
 document.getElementById('btn-pm2-delete-all').onclick = () => sendAction('pm2-delete-all');
 
-document.getElementById('btn-pm2-stop').onclick = () => {
-    const id = document.getElementById('pm2-id').value;
-    if (id) sendAction('pm2-stop', { id });
-    else log('Please enter an App Name or ID', 'error');
-};
-
-document.getElementById('btn-pm2-delete').onclick = () => {
-    const id = document.getElementById('pm2-id').value;
-    if (id) sendAction('pm2-delete', { id });
-    else log('Please enter an App Name or ID', 'error');
-};
-
 document.getElementById('btn-pm2-logs').onclick = () => {
-    const id = document.getElementById('pm2-id').value;
-    sendAction('pm2-logs', { id: id || '' });
+    sendAction('pm2-logs', { id: 'all' });
 };
 
 const customSetupCheckbox = document.getElementById('custom-setup');
 
 function runInstallationWithParams(params) {
     pendingParams = params;
-
-    // Stage 1: Validate links
     statusBadge.textContent = 'Validating...';
     statusBadge.className = 'status-badge status-running';
     terminal.innerHTML = '';
@@ -136,7 +135,6 @@ document.getElementById('btn-install').onclick = () => {
     if (customSetupCheckbox.checked) {
         modal.style.display = 'flex';
     } else {
-        // Run with default parameters
         runInstallationWithParams({
             is_dev: 'false',
             branch: '',
@@ -158,3 +156,21 @@ document.getElementById('confirm-install').onclick = () => {
     modal.style.display = 'none';
     runInstallationWithParams(params);
 };
+
+// Tab Switching Logic
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.background = 'none';
+        btn.style.color = 'var(--text-primary)';
+    });
+
+    document.getElementById(`tab-${tabId}`).style.display = 'block';
+    const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.textContent.toLowerCase().includes(tabId) || b.textContent.toLowerCase().includes(tabId === 'dev' ? 'dev tools' : tabId));
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+        activeBtn.style.background = 'var(--accent-color)';
+        activeBtn.style.color = 'white';
+    }
+}

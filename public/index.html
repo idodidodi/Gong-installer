@@ -16,102 +16,139 @@
             <div id="status" class="status-badge">Ready</div>
         </header>
 
-        <div class="card config-card">
-            <h3 class="accent-title">Global Configuration (Credentials)</h3>
-            <div class="config-grid">
-                <div class="input-group">
-                    <label>User</label>
-                    <input type="text" id="global-user" value="p-admin">
-                </div>
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="global-pass" value="123456">
-                </div>
-                <div class="input-group" style="flex: 2; min-width: 300px;">
-                    <label>Project Path (Persistent)</label>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <input type="text" id="global-path" value="~/gong" style="flex: 1;">
-                        <button class="primary" id="btn-browse" style="padding: 0 1rem; height: 42px;">Browse</button>
+        <div class="tabs" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <button class="tab-btn active" onclick="switchTab('installer')"
+                style="padding: 0.5rem 1rem; cursor: pointer; border: 1px solid var(--accent-color); background: var(--accent-color); color: white; border-radius: 4px;">Installer</button>
+            <button class="tab-btn" onclick="switchTab('dev')"
+                style="padding: 0.5rem 1rem; cursor: pointer; border: 1px solid var(--accent-color); background: none; color: var(--text-primary); border-radius: 4px;">DEV
+                Tools</button>
+        </div>
+
+        <div id="tab-installer" class="tab-content active">
+            <div class="card config-card">
+                <h3 class="accent-title">Global Configuration (Credentials)</h3>
+                <div class="config-grid">
+                    <div class="input-group">
+                        <label>User</label>
+                        <input type="text" id="global-user" value="p-admin">
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="global-pass" value="123456">
+                    </div>
+                    <div class="input-group" style="flex: 2; min-width: 300px;">
+                        <label>Project Path (Persistent)</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="global-path" value="~/gong" style="flex: 1;">
+                            <button class="primary" id="btn-browse"
+                                style="padding: 0 1rem; height: 42px;">Browse</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="controls">
-            <div class="card action-card" id="btn-extra-clean">
-                <h3>Extra Clean</h3>
-                <p>Full cleanup (skips installer). Kills PM2 and clears workspace.</p>
-            </div>
-            <div class="card action-card" id="btn-clean">
-                <h3>Clean</h3>
-                <p>Standard cleanup of ~/projects and Gong-be.</p>
-            </div>
-            <div class="card action-card" id="btn-install">
-                <h3>Install</h3>
-                <p>Runs docker_init with custom parameters.</p>
-                <div class="checkbox-group" onclick="event.stopPropagation()">
-                    <input type="checkbox" id="custom-setup">
-                    <label for="custom-setup">Custom Setup</label>
+            <div class="controls">
+                <div class="card action-card" id="btn-extra-clean">
+                    <h3>Extra Clean</h3>
+                    <p>Full cleanup (skips installer). Kills PM2 and clears workspace.</p>
+                </div>
+                <div class="card action-card" id="btn-clean">
+                    <h3>Clean</h3>
+                    <p>Standard cleanup of ~/projects and Gong-be.</p>
+                </div>
+                <div class="card action-card" id="btn-install">
+                    <h3>Install</h3>
+                    <p>Runs docker_init with custom parameters.</p>
+                    <div class="checkbox-group" onclick="event.stopPropagation()">
+                        <input type="checkbox" id="custom-setup">
+                        <label for="custom-setup">Custom Setup</label>
+                    </div>
+                </div>
+                <div class="card action-card" id="btn-pm2">
+                    <h3>PM2 Setup</h3>
+                    <p>Starts services and saves configuration.</p>
                 </div>
             </div>
-            <div class="card action-card" id="btn-pm2">
-                <h3>PM2 Setup</h3>
-                <p>Starts services and saves configuration.</p>
-            </div>
         </div>
 
-        <div class="controls secondary">
-            <div class="card mini" id="btn-pm2-list">
-                <h3>PM2 List</h3>
+        <div id="tab-dev" class="tab-content" style="display: none;">
+            <div class="card config-card">
+                <h3 class="accent-title">DEV Configuration</h3>
+                <div class="config-grid">
+                    <div class="input-group" style="flex: 1; min-width: 300px;">
+                        <label>Root Dev Folder (Persistent)</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="dev-path" value="~/projects" style="flex: 1;">
+                            <button class="primary" id="btn-browse-dev"
+                                style="padding: 0 1rem; height: 42px;">Browse</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card mini" id="btn-pm2-stop-all">
-                <h3>Stop All</h3>
-            </div>
-            <div class="card mini" id="btn-pm2-delete-all">
-                <h3>Delete All</h3>
-            </div>
-        </div>
 
-        <div class="pm2-actions-form card">
-            <div class="pm2-form-inner">
-                <input type="text" id="pm2-id" placeholder="App Name or ID">
-                <button class="btn-stop" id="btn-pm2-stop">Stop</button>
-                <button class="btn-delete" id="btn-pm2-delete">Delete</button>
-                <button class="btn-logs" id="btn-pm2-logs"
-                    style="background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Logs</button>
+            <div class="controls dev-controls"
+                style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div class="card action-card" id="btn-copy-ftdi" style="width: 100%;">
+                    <h3>Copy FTDI</h3>
+                    <p>Override existing node_modules/ftdi-d2xx starting from source.</p>
+                    <div style="font-size: 0.85em; opacity: 0.8; margin-top: 0.5rem; word-break: break-all;">
+                        <strong>Source:</strong> <span
+                            id="ftdi-source-path">~/gong/gong_server/node_modules/ftdi-d2xx</span>
+                        <br /><br />
+                        <strong>Destinations:</strong> <br /><span
+                            id="ftdi-dest-path">~/projects/gong_server/node_modules/ftdi-d2xx<br />~/projects/Gong-be/node_modules/ftdi-d2xx</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="accent-title" style="margin-top: 2rem;">PM2 Actions</h3>
+            <div class="controls secondary" style="margin-top: 0;">
+                <div class="card mini" id="btn-pm2-list">
+                    <h3>PM2 List</h3>
+                </div>
+                <div class="card mini" id="btn-pm2-stop-all">
+                    <h3>Stop All</h3>
+                </div>
+                <div class="card mini" id="btn-pm2-delete-all">
+                    <h3>Delete All</h3>
+                </div>
+                <div class="card mini" id="btn-pm2-logs"
+                    style="background: var(--accent-color); color: white; border: none;">
+                    <h3>Logs</h3>
+                </div>
             </div>
         </div>
 
         <div id="terminal" class="terminal-container">
             <div class="log-line log-info">Welcome to Gong Installer. Select an action to begin.</div>
         </div>
-    </div>
 
-    <!-- Install Parameters Modal -->
-    <div id="install-modal" class="modal">
-        <div class="modal-content">
-            <h3>Installation Parameters</h3>
-            <div class="input-group">
-                <label>Is Dev</label>
-                <select id="param-isdev">
-                    <option value="true">True</option>
-                    <option value="false" selected>False</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>Branch</label>
-                <input type="text" id="param-branch" value="" placeholder="leave it blank if you are not a developer">
-            </div>
-            <div class="input-group">
-                <label>Repository</label>
-                <input type="text" id="param-repo" value="" placeholder="leave it blank if you are not a developer">
-            </div>
-            <div class="modal-buttons">
-                <button class="primary" id="confirm-install">Run Installation</button>
-                <button id="cancel-install" class="btn-cancel">Cancel</button>
+        <!-- Install Parameters Modal -->
+        <div id="install-modal" class="modal">
+            <div class="modal-content">
+                <h3>Installation Parameters</h3>
+                <div class="input-group">
+                    <label>Is Dev</label>
+                    <select id="param-isdev">
+                        <option value="true">True</option>
+                        <option value="false" selected>False</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Branch</label>
+                    <input type="text" id="param-branch" value=""
+                        placeholder="leave it blank if you are not a developer">
+                </div>
+                <div class="input-group">
+                    <label>Repository</label>
+                    <input type="text" id="param-repo" value="" placeholder="leave it blank if you are not a developer">
+                </div>
+                <div class="modal-buttons">
+                    <button class="primary" id="confirm-install">Run Installation</button>
+                    <button id="cancel-install" class="btn-cancel">Cancel</button>
+                </div>
             </div>
         </div>
-    </div>
 
     </div>
     </div>

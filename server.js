@@ -35,7 +35,7 @@ function maskObject(obj) {
 }
 
 function loadConfig() {
-    const defaultConfig = { projectPath: path.join(os.homedir(), 'gong') };
+    const defaultConfig = { projectPath: path.join(os.homedir(), 'gong'), devPath: path.join(os.homedir(), 'projects') };
     try {
         if (fs.existsSync(CONFIG_FILE)) {
             return { ...defaultConfig, ...JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')) };
@@ -51,7 +51,10 @@ function saveConfig(config) {
         if (!fs.existsSync(CONFIG_DIR)) {
             fs.mkdirSync(CONFIG_DIR, { recursive: true });
         }
-        fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+        // Merge with existing config instead of full overwrite to preserve keys
+        const existing = loadConfig();
+        const merged = { ...existing, ...config };
+        fs.writeFileSync(CONFIG_FILE, JSON.stringify(merged, null, 2));
     } catch (e) {
         console.error('Error saving config:', e);
     }
@@ -102,11 +105,12 @@ wss.on('connection', (ws) => {
 
         if (payload.action === 'update-config') {
             saveConfig(payload.params);
-            ws.send(JSON.stringify({ type: 'config', data: payload.params }));
+            ws.send(JSON.stringify({ type: 'config', data: loadConfig() }));
             console.log('Config updated:', maskObject(payload.params));
         } else if (payload.action === 'open-system-browser') {
             const startPath = (payload.params.path || os.homedir()).replace('~', os.homedir());
-            const cmd = `zenity --file-selection --directory --title="Select Project Folder" --filename="${startPath}/"`;
+            const target = payload.params.target || 'global';
+            const cmd = `zenity --file-selection --directory --title="Select Folder" --filename="${startPath}/"`;
             exec(cmd, (error, stdout, stderr) => {
                 if (error) {
                     if (error.code !== 1) { // 1 is usually "Cancel"
@@ -116,7 +120,15 @@ wss.on('connection', (ws) => {
                 }
                 const selectedPath = stdout.trim();
                 if (selectedPath) {
-                    const newConfig = { projectPath: selectedPath };
+                    const existingConfig = loadConfig();
+                    let newConfig = { ...existingConfig };
+
+                    if (target === 'dev') {
+                        newConfig.devPath = selectedPath;
+                    } else {
+                        newConfig.projectPath = selectedPath;
+                    }
+
                     saveConfig(newConfig);
                     ws.send(JSON.stringify({ type: 'config', data: newConfig }));
                 }
@@ -139,6 +151,8 @@ wss.on('connection', (ws) => {
             runCommand(`bash "${path.join(SCRIPTS_DIR, 'extra-clean.sh')}" "${payload.params.pass}" "${payload.params.projectPath}"`, [], ws, pass);
         } else if (payload.action === 'clean') {
             runCommand(`bash "${path.join(SCRIPTS_DIR, 'clean.sh')}" "${payload.params.pass}" "${payload.params.projectPath}"`, [], ws, pass);
+        } else if (payload.action === 'copy-ftdi') {
+            runCommand(`bash "${path.join(SCRIPTS_DIR, 'copy-ftdi.sh')}" "${payload.params.devPath}"`, [], ws, pass);
         } else if (payload.action === 'install') {
             const { params } = payload;
             const cmd = `bash "${path.join(SCRIPTS_DIR, 'init.sh')}" "${params.user}" "${params.pass}" "${params.is_dev}" "${params.branch}" "${params.repo}" "${params.projectPath}"`;
