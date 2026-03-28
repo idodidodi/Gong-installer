@@ -48,20 +48,26 @@
             </div>
 
             <div class="controls">
-                <div class="card action-card" id="btn-extra-clean">
-                    <h3>Extra Clean</h3>
-                    <p>Full cleanup (skips installer). Kills PM2 and clears workspace.</p>
-                </div>
                 <div class="card action-card" id="btn-clean">
                     <h3>Clean</h3>
                     <p>Standard cleanup of ~/projects and Gong-be.</p>
+                    <div class="checkbox-group" onclick="event.stopPropagation()">
+                        <input type="checkbox" id="extra-clean-checkbox">
+                        <label for="extra-clean-checkbox">Extra Clean</label>
+                    </div>
                 </div>
                 <div class="card action-card" id="btn-install">
                     <h3>Install</h3>
                     <p>Runs docker_init with custom parameters.</p>
-                    <div class="checkbox-group" onclick="event.stopPropagation()">
-                        <input type="checkbox" id="custom-setup">
-                        <label for="custom-setup">Custom Setup</label>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+                        <div class="checkbox-group" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="custom-setup">
+                            <label for="custom-setup">Custom Setup</label>
+                        </div>
+                        <div class="checkbox-group" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="pm2-setup-checkbox" checked>
+                            <label for="pm2-setup-checkbox">Run PM2 Setup</label>
+                        </div>
                     </div>
                 </div>
                 <div class="card action-card" id="btn-pm2">

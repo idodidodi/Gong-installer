@@ -156,7 +156,18 @@ wss.on('connection', (ws) => {
         } else if (payload.action === 'install') {
             const { params } = payload;
             const cmd = `bash "${path.join(SCRIPTS_DIR, 'init.sh')}" "${params.user}" "${params.pass}" "${params.is_dev}" "${params.branch}" "${params.repo}" "${params.projectPath}"`;
-            runCommand(`pm2 kill && ${cmd}`, [], ws, pass);
+            const child = runCommand(`pm2 kill && ${cmd}`, [], ws, pass);
+
+            if (params.pm2Setup) {
+                child.on('close', (code) => {
+                    if (code === 0) {
+                        ws.send(JSON.stringify({ type: 'log', data: '\n--- Starting Automated PM2 Setup ---\n' }));
+                        const ecosystemPath = path.join(params.projectPath, 'gong_dev_ops', 'dev_ops', 'ecosystem.config.js');
+                        const pm2Cmd = `bash "${path.join(SCRIPTS_DIR, 'pm2-setup.sh')}" "${params.pass}" "${ecosystemPath}"`;
+                        runCommand(pm2Cmd, [], ws, pass);
+                    }
+                });
+            }
         } else if (payload.action === 'validate-links') {
             const { branch, repo } = payload.params;
             const beRepo = "https://github.com/DhammaPamoda/Gong-be.git";

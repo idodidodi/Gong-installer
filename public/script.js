@@ -102,8 +102,16 @@ function openBrowser(target = 'global') {
 document.getElementById('btn-browse').onclick = () => openBrowser('global');
 document.getElementById('btn-browse-dev').onclick = () => openBrowser('dev');
 
-document.getElementById('btn-extra-clean').onclick = () => sendAction('extra-clean');
-document.getElementById('btn-clean').onclick = () => sendAction('clean');
+const extraCleanCheckbox = document.getElementById('extra-clean-checkbox');
+const pm2SetupCheckbox = document.getElementById('pm2-setup-checkbox');
+
+document.getElementById('btn-clean').onclick = () => {
+    if (extraCleanCheckbox.checked) {
+        sendAction('extra-clean');
+    } else {
+        sendAction('clean');
+    }
+};
 document.getElementById('btn-pm2').onclick = () => sendAction('pm2-setup');
 
 document.getElementById('btn-copy-ftdi').onclick = () => sendAction('copy-ftdi', { devPath: devPathInput.value });
@@ -132,10 +140,14 @@ function runInstallationWithParams(params) {
 }
 
 document.getElementById('btn-install').onclick = () => {
+    const commonParams = {
+        pm2Setup: pm2SetupCheckbox.checked
+    };
     if (customSetupCheckbox.checked) {
         modal.style.display = 'flex';
     } else {
         runInstallationWithParams({
+            ...commonParams,
             is_dev: 'false',
             branch: '',
             repo: ''
@@ -151,7 +163,8 @@ document.getElementById('confirm-install').onclick = () => {
     const params = {
         is_dev: document.getElementById('param-isdev').value,
         branch: document.getElementById('param-branch').value,
-        repo: document.getElementById('param-repo').value
+        repo: document.getElementById('param-repo').value,
+        pm2Setup: pm2SetupCheckbox.checked
     };
     modal.style.display = 'none';
     runInstallationWithParams(params);
