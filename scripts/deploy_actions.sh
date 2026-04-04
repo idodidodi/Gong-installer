@@ -96,6 +96,17 @@ sudo -S udevadm trigger <<< "${USER_PASS}"
 "${DEV_OPS_FILES_DIR}"/refresh_gong_server_be.sh "${USER}" "${USER_PASS}" "${GONG_BE_BRANCH}" "${BASE_DIR}"
 "${DEV_OPS_FILES_DIR}"/refresh_gong_server_fe.sh "${USER}" "${USER_PASS}" "${GONG_FE_BRANCH}" "${BASE_DIR}"
 
+# Alert Mock Server setup
+echo "Setting up alert-mock-server..."
+if [ -d "${BASE_DIR}/alert-mock-server" ]; then
+  rm -rf "${BASE_DIR}/alert-mock-server"
+fi
+git clone https://github.com/idodidodi/alert-mock-server.git "${BASE_DIR}/alert-mock-server"
+cd "${BASE_DIR}/alert-mock-server"
+npm install
+npm install -g pkg
+pkg server.js --target node18-linux-x64 --output server
+cd "${BASE_DIR}"
 # logrotate
 sudo -S cp -f "${DEV_OPS_FILES_DIR}/gong_logrotate" /etc/logrotate.d/gong <<< "${USER_PASS}"
 sudo -S sed -i "s/dhamma/${USER}/g" /etc/logrotate.d/gong <<< "${USER_PASS}"
